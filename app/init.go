@@ -67,7 +67,9 @@ func InitDB() {
 
   var err error           
 
-  conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "adaqwerty15", "1", "localhost", 5432, "gocomments")
+  // conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "adaqwerty15", "1", "localhost", 6543, "gocomments")
+  conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "postgres", "1", "db", 5432, "gocomments")
+  //conn := postgresql://postgres:1@postgres/gocomments
     
   DB, err = sql.Open("postgres", conn)
 
@@ -84,7 +86,7 @@ func InitDB() {
 		    last_name character varying(100),
 		    photo character varying(255),
 		    CONSTRAINT users_pkey PRIMARY KEY (id));
-
+		     
 		 INSERT INTO users(id,
 		 auth_type, first_name, last_name)
 		 VALUES (0, 'in', 'Ivan', 'Ivanov')
@@ -132,7 +134,7 @@ func InitDB() {
 		 INSERT INTO public.comments(
 			id, page_id, user_id, text, "timestamp", status, important)
 			VALUES (0, 0, 0, 'My second comment!', now(), 'published', false)
-			ON CONFLICT DO NOTHING;		 
+			ON CONFLICT DO NOTHING;	  
 		 `
 
    _, err2 := DB.Query(sql)
