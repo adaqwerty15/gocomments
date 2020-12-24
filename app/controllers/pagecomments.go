@@ -56,7 +56,7 @@ func (c PageComments) List() revel.Result {
 }	
 
 
-func (c PageComments) Add() revel.Result {	
+func (c PageComments) AddAuth() revel.Result {	
 	var jsonData map[string]interface{}
     c.Params.BindJSON(&jsonData)
 
@@ -115,6 +115,122 @@ func (c PageComments) Add() revel.Result {
 	var commentId int
 
 	err = app.DB.QueryRow(sql, id, jsonData["user_id"], jsonData["text"], status, false).Scan(&commentId)
+
+
+	if err != nil {
+		log.Println(err)
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}
+
+
+	log.Println(commentId)
+
+	sql = `SELECT comments.id, pages.id, pages.url, users.id, 
+			first_name, last_name, timestamp, text, status, important from users, comments, pages
+			where pages.id=comments.page_id and users.id=comments.user_id and comments.id=$1;`
+
+	cm := new(m.Comment)
+   	
+	err = app.DB.QueryRow(sql, commentId).Scan(&cm.Id, 
+			&cm.PageId, &cm.PageUrl, &cm.UserId, &cm.UserFirstName, 
+        	&cm.UserLastName, &cm.Timestamp, &cm.Text, &cm.Status, &cm.Important)
+
+    if err != nil {
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}    		
+
+    cmi := m.CommentInfo{Id: cm.Id, Page:m.Page{cm.PageId, cm.PageUrl},
+         User:m.User{cm.UserId, cm.UserFirstName, cm.UserLastName}, Timestamp: cm.Timestamp, 
+         Text: cm.Text, Status: cm.Status, Important: cm.Important}    		
+
+    
+	data := make(map[string]interface{})
+    data["comment"] = cmi
+
+    c.Response.SetStatus(http.StatusOK)
+	c.Response.ContentType = "application/json"
+	return c.RenderJSON(data)
+}
+
+
+func (c PageComments) AddNoAuth() revel.Result {	
+	var jsonData map[string]interface{}
+    c.Params.BindJSON(&jsonData)
+
+    company := jsonData["company_id"]
+    url := jsonData["url"]
+
+    var err error
+
+    var is_moderated bool
+    sql := `SELECT is_moderated from companies where id=$1;`
+    err = app.DB.QueryRow(sql, company).Scan(&is_moderated)
+
+    if err != nil {
+		log.Fatal(err)
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}
+
+	status := "unmoderated"
+
+	if !is_moderated {
+		status = "published"
+	}
+
+	var id int
+
+	sql = `SELECT id from pages where url=$1 and company_id=$2;`
+	err = app.DB.QueryRow(sql, url, company).Scan(&id)
+
+    if err != nil {
+		log.Println(err)
+		stmt, err2 := app.DB.Prepare("INSERT INTO pages(company_id, url) VALUES($1, $2) RETURNING id;")
+		if err2 != nil {
+			log.Println(err2)
+			c.Response.ContentType = "application/json"
+			c.Response.SetStatus(http.StatusInternalServerError)
+			return c.RenderJSON("{}")
+		}
+		err2 = stmt.QueryRow(company, url).Scan(&id)
+
+		if err2 != nil {
+			log.Println(err2)
+			c.Response.ContentType = "application/json"
+			c.Response.SetStatus(http.StatusInternalServerError)
+			return c.RenderJSON("{}")
+		}
+
+		
+	}
+
+	var userId int
+
+	sql = `INSERT INTO users(
+	auth_type, first_name, last_name)
+	VALUES ('in', $1, $2) RETURNING id;`
+
+	err = app.DB.QueryRow(sql, jsonData["first_name"], jsonData["last_name"]).Scan(&userId)
+
+	if err != nil {
+		log.Println(err)
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}
+
+	sql = `INSERT INTO comments(
+	page_id, user_id, text, "timestamp", status, important)
+	VALUES ($1, $2, $3, now(), $4, $5) RETURNING id;`
+
+	var commentId int
+
+	err = app.DB.QueryRow(sql, id, userId, jsonData["text"], status, false).Scan(&commentId)
 
 
 	if err != nil {

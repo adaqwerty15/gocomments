@@ -18,7 +18,8 @@ GET     /company                    		Company.Info
 GET     /company/stats                      Company.Stats
 
 GET     /pagecomments                       PageComments.List
-POST    /pagecomments/newcomment			PageComments.Add
+POST    /pagecomments/newcomment/auth		PageComments.AddAuth
+POST    /pagecomments/newcomment/noauth		PageComments.AddNoAuth
 
 # Ignore favicon requests
 GET     /favicon.ico                            404
