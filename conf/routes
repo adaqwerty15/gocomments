@@ -8,7 +8,15 @@ module:testrunner
 
 
 GET     /                                       App.Index
+
 GET     /comments                       	Comments.List
+GET     /comments/publish                   Comments.Publish
+GET     /comments/delete                    Comments.Delete
+
+
+GET     /company                    		Company.Info
+GET     /company/stats                      Company.Stats
+
 GET     /pagecomments                       PageComments.List
 POST    /pagecomments/newcomment			PageComments.Add
 

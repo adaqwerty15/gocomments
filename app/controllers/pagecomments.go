@@ -43,7 +43,7 @@ func (c PageComments) List() revel.Result {
             log.Fatal(err)
         }
         cmts = append(cmts, m.CommentInfo{Id: cm.Id, Page:m.Page{cm.PageId, cm.PageUrl},
-         User:m.User{cm.UserId, cm.UserFirstName, cm.UserFirstName}, Timestamp: cm.Timestamp, 
+         User:m.User{cm.UserId, cm.UserFirstName, cm.UserLastName}, Timestamp: cm.Timestamp, 
          Text: cm.Text, Status: cm.Status, Important: cm.Important})
     }	
 
@@ -144,7 +144,7 @@ func (c PageComments) Add() revel.Result {
 	}    		
 
     cmi := m.CommentInfo{Id: cm.Id, Page:m.Page{cm.PageId, cm.PageUrl},
-         User:m.User{cm.UserId, cm.UserFirstName, cm.UserFirstName}, Timestamp: cm.Timestamp, 
+         User:m.User{cm.UserId, cm.UserFirstName, cm.UserLastName}, Timestamp: cm.Timestamp, 
          Text: cm.Text, Status: cm.Status, Important: cm.Important}    		
 
     

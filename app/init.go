@@ -21,6 +21,7 @@ var (
 func init() {
 	// Filters is the default set of global filters.
 	revel.Filters = []revel.Filter{
+		HeaderFilter,                  // Add some security based headers
 		revel.PanicFilter,             // Recover from panics and display an error page instead.
 		revel.RouterFilter,            // Use the routing table to select the right Action
 		revel.FilterConfiguringFilter, // A hook for adding or removing per-Action filters.
@@ -29,7 +30,6 @@ func init() {
 		revel.FlashFilter,             // Restore and write the flash cookie.
 		revel.ValidationFilter,        // Restore kept validation errors and save new ones from cookie.
 		revel.I18nFilter,              // Resolve the requested language
-		HeaderFilter,                  // Add some security based headers
 		revel.InterceptorFilter,       // Run interceptors around the action.
 		revel.CompressFilter,          // Compress the result.
 		revel.BeforeAfterFilter,       // Call the before and after filter functions
@@ -52,6 +52,11 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	c.Response.Out.Header().Add("X-Content-Type-Options", "nosniff")
 	c.Response.Out.Header().Add("Referrer-Policy", "strict-origin-when-cross-origin")
 
+	c.Response.Out.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
+	c.Response.Out.Header().Add("Access-Control-Allow-Origin", "*")
+	c.Response.Out.Header().Add("Access-Control-Allow-Method", "POST, GET, OPTIONS, PUT, DELETE")
+	c.Response.Out.Header().Add("Content-Type", "application/json; charset=UTF-8")
+
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
 
@@ -67,9 +72,9 @@ func InitDB() {
 
   var err error           
 
-  // conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "adaqwerty15", "1", "localhost", 6543, "gocomments")
-  conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "postgres", "1", "db", 5432, "gocomments")
-  //conn := postgresql://postgres:1@postgres/gocomments
+  // conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "adaqwerty15", "1", "localhost", 5432, "gocomments")
+  conn := fmt.Sprintf("user=%s sslmode=disable password='%s' host=%s port=%d dbname=%s", "postgres", "1", "db", 5432, "gocomments")
+  // conn := "postgresql://postgres:1@db:5432/gocomments?sslmode=disable"
     
   DB, err = sql.Open("postgres", conn)
 
@@ -92,8 +97,16 @@ func InitDB() {
 		 VALUES (0, 'in', 'Ivan', 'Ivanov')
 		 ON CONFLICT DO NOTHING;
 
+		 INSERT INTO users(id,
+		 auth_type, first_name, last_name)
+		 VALUES (-1, 'in', 'Petr', 'Petrov')
+		 ON CONFLICT DO NOTHING;
+
+		 DROP TABLE companies;
+
 		 CREATE TABLE if not exists companies (
 		    id serial NOT NULL,
+		    user_main_id integer,
 		    name character varying(100),
 		    website character varying(100),
 		    is_moderated boolean,
@@ -101,8 +114,8 @@ func InitDB() {
 		    CONSTRAINT companies_pkey PRIMARY KEY (id));
 
 		 INSERT INTO companies(
-			id, name, website, is_moderated, is_authed)
-			VALUES (0, 'GGKL', 'ggkl.me', true, false)
+			id, user_main_id, name, website, is_moderated, is_authed)
+			VALUES (0, -1, 'GGKL', 'ggkl.me', true, false)
 			ON CONFLICT DO NOTHING;   
 
 		 CREATE TABLE if not exists pages (
@@ -128,7 +141,7 @@ func InitDB() {
 
 		 INSERT INTO public.comments(
 			id, page_id, user_id, text, "timestamp", status, important)
-			VALUES (-1, 0, 0, 'My first comment!', now(), 'unmodified', false)
+			VALUES (-1, 0, 0, 'My first comment!', now(), 'unmoderated', false)
 			ON CONFLICT DO NOTHING; 
 
 		 INSERT INTO public.comments(
