@@ -84,7 +84,7 @@ func InitDB() {
 
   var err error           
 
-  //conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "adaqwerty15", "1", "localhost", 5432, "gocomments")
+  // conn := fmt.Sprintf("user=%s password='%s' host=%s port=%d dbname=%s", "adaqwerty15", "1", "localhost", 5432, "gocomments")
   conn := fmt.Sprintf("user=%s sslmode=disable password='%s' host=%s port=%d dbname=%s", "postgres", "1", "db", 5432, "gocomments")
   // conn := "postgresql://postgres:1@db:5432/gocomments?sslmode=disable"
     

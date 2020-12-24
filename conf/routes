@@ -16,6 +16,8 @@ GET     /comments/delete                    Comments.Delete
 
 GET     /company                    		Company.Info
 GET     /company/stats                      Company.Stats
+GET     /company/changemoderation           Company.ChangeModeration
+GET     /company/changeauth                 Company.ChangeAuth
 
 GET     /pagecomments                       PageComments.List
 POST    /pagecomments/newcomment/auth		PageComments.AddAuth

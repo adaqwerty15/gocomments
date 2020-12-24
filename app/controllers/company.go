@@ -100,3 +100,124 @@ func (c Company) Stats() revel.Result {
 	c.Response.ContentType = "application/json"
 	return c.RenderJSON(data)
 }
+
+
+func (c Company) ChangeModeration() revel.Result {
+
+	is_mod := c.Params.Query.Get("is_mod")
+	id := c.Params.Query.Get("id")
+
+	var is_mod_b bool
+
+	var err error
+
+	if (is_mod=="true") {
+		is_mod_b = true
+	} else {
+		is_mod_b = false
+	}
+
+	stmt, err := app.DB.Prepare("UPDATE companies SET is_moderated=$2 WHERE id=$1;")
+	if err != nil {
+		log.Println(err)
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}
+	_, err = stmt.Exec(id, is_mod_b)
+
+	if err != nil {
+		log.Println(err)
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}
+
+	sql := `SELECT companies.id, user_main_id, first_name, last_name, name, website, is_moderated, is_authed
+	FROM companies, users where users.id=companies.user_main_id and companies.id=$1;`
+
+	cm := new(m.Company)
+   	
+	err = app.DB.QueryRow(sql, id).Scan(&cm.Id, 
+			&cm.UserId,  &cm.FirstName, 
+        	&cm.LastName, &cm.Name, &cm.Website, &cm.IsModerated, &cm.IsAuthed)
+
+    if err != nil {
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}    		
+
+    cmi := m.CompanyInfo{Id: cm.Id,
+         User:m.User{cm.UserId, cm.FirstName, cm.FirstName}, Name: cm.Name, 
+         Website: cm.Website, IsModerated: cm.IsModerated, IsAuthed: cm.IsAuthed}    		
+
+    
+	data := make(map[string]interface{})
+    data["company"] = cmi
+
+    c.Response.SetStatus(http.StatusOK)
+	c.Response.ContentType = "application/json"
+	return c.RenderJSON(data)
+}
+
+
+
+func (c Company) ChangeAuth() revel.Result {
+
+	is_mod := c.Params.Query.Get("is_auth")
+	id := c.Params.Query.Get("id")
+
+	var is_mod_b bool
+
+	var err error
+
+	if (is_mod=="true") {
+		is_mod_b = true
+	} else {
+		is_mod_b = false
+	}
+
+	stmt, err := app.DB.Prepare("UPDATE companies SET is_authed=$2 WHERE id=$1;")
+	if err != nil {
+		log.Println(err)
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}
+	_, err = stmt.Exec(id, is_mod_b)
+
+	if err != nil {
+		log.Println(err)
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}
+
+	sql := `SELECT companies.id, user_main_id, first_name, last_name, name, website, is_moderated, is_authed
+	FROM companies, users where users.id=companies.user_main_id and companies.id=$1;`
+
+	cm := new(m.Company)
+   	
+	err = app.DB.QueryRow(sql, id).Scan(&cm.Id, 
+			&cm.UserId,  &cm.FirstName, 
+        	&cm.LastName, &cm.Name, &cm.Website, &cm.IsModerated, &cm.IsAuthed)
+
+    if err != nil {
+		c.Response.ContentType = "application/json"
+		c.Response.SetStatus(http.StatusInternalServerError)
+		return c.RenderJSON("{}")
+	}    		
+
+    cmi := m.CompanyInfo{Id: cm.Id,
+         User:m.User{cm.UserId, cm.FirstName, cm.FirstName}, Name: cm.Name, 
+         Website: cm.Website, IsModerated: cm.IsModerated, IsAuthed: cm.IsAuthed}    		
+
+    
+	data := make(map[string]interface{})
+    data["company"] = cmi
+
+    c.Response.SetStatus(http.StatusOK)
+	c.Response.ContentType = "application/json"
+	return c.RenderJSON(data)
+}
