@@ -21,7 +21,7 @@ func (c PageComments) List() revel.Result {
 	sql := `SELECT comments.id, pages.id, pages.url, users.id, 
 			first_name, last_name, timestamp, text, status, important from users, comments, pages
 			where pages.id=comments.page_id and users.id=comments.user_id and pages.company_id=$1
-			and pages.url = $2 and status='published' order by timestamp DESC;`
+			and pages.url = $2 and status='published' order by timestamp ASC;`
 
 	rows, err := app.DB.Query(sql, company, url)
 
